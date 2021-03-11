@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+
+  broker:
+    container_name: broker
+    hostname: broker
+    image: rabbitmq
+    networks:
+      - dcs_network
+    ports:
+      - 5672:5672
+
+  monitor:
+    container_name: monitor
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@broker//
+      - FLOWER_PORT=8888
+    hostname: monitor
+    image: mher/flower
+    networks:
+      - dcs_network
+    ports:
+      - 8888:8888
+
+  worker0:
+    build: ./workers/worker0/
+    command: celery --app=workers.worker0.proj worker --loglevel=INFO
+    container_name: worker0
+    environment:
+      - BROKER_URL=amqp://guest:guest@broker//
+    hostname: worker0
+    image: worker0
+    networks:
+      - dcs_network
+
+networks:
+  dcs_network: {}
